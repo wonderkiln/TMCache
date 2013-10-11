@@ -463,23 +463,21 @@ NSString * const TMMemoryCachePrefix = @"com.tumblr.TMMemoryCache";
 {
     if (!key)
         return nil;
-
-    __block id objectForKey = nil;
-
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
-    [self objectForKey:key block:^(TMMemoryCache *cache, NSString *key, id object) {
-        objectForKey = object;
-        dispatch_semaphore_signal(semaphore);
-    }];
-
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-
-    #if !OS_OBJECT_USE_OBJC
-    dispatch_release(semaphore);
-    #endif
-
-    return objectForKey;
+    
+    NSDate *now = [[NSDate alloc] init];
+    
+    id object = [_dictionary objectForKey:key];
+    
+    if (object) {
+        __weak TMMemoryCache *weakSelf = self;
+        dispatch_barrier_async(_queue, ^{
+            TMMemoryCache *strongSelf = weakSelf;
+            if (strongSelf)
+                [strongSelf->_dates setObject:now forKey:key];
+        });
+    }
+    
+    return object;
 }
 
 - (void)setObject:(id)object forKey:(NSString *)key

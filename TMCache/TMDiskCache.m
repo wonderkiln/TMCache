@@ -670,23 +670,18 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 {
     if (!key)
         return nil;
-
-    __block id <NSCoding> objectForKey = nil;
-
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
-    [self objectForKey:key block:^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
-        objectForKey = object;
-        dispatch_semaphore_signal(semaphore);
-    }];
     
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-
-    #if !OS_OBJECT_USE_OBJC
-    dispatch_release(semaphore);
-    #endif
-
-    return objectForKey;
+    NSDate *now = [NSDate new];
+    
+    NSURL *fileURL = [self encodedFileURLForKey:key];
+    id <NSCoding> object = nil;
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
+        object = [NSKeyedUnarchiver unarchiveObjectWithFile:[fileURL path]];
+        [self setFileModificationDate:now forURL:fileURL];
+    }
+    
+    return object;
 }
 
 - (NSURL *)fileURLForKey:(NSString *)key
