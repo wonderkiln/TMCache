@@ -71,45 +71,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         if (!strongSelf)
             return;
 
-        __weak TMCache *weakSelf = strongSelf;
-        
-        [strongSelf->_memoryCache objectForKey:key block:^(TMMemoryCache *cache, NSString *key, id object) {
-            TMCache *strongSelf = weakSelf;
-            if (!strongSelf)
-                return;
-            
-            if (object) {
-                [strongSelf->_diskCache fileURLForKey:key block:^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
-                    // update the access time on disk
-                }];
-
-                __weak TMCache *weakSelf = strongSelf;
-                
-                dispatch_async(strongSelf->_queue, ^{
-                    TMCache *strongSelf = weakSelf;
-                    if (strongSelf)
-                        block(strongSelf, key, object);
-                });
-            } else {
-                __weak TMCache *weakSelf = strongSelf;
-
-                [strongSelf->_diskCache objectForKey:key block:^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
-                    TMCache *strongSelf = weakSelf;
-                    if (!strongSelf)
-                        return;
-                    
-                    [strongSelf->_memoryCache setObject:object forKey:key block:nil];
-                    
-                    __weak TMCache *weakSelf = strongSelf;
-                    
-                    dispatch_async(strongSelf->_queue, ^{
-                        TMCache *strongSelf = weakSelf;
-                        if (strongSelf)
-                            block(strongSelf, key, object);
-                    });
-                }];
-            }
-        }];
+        block(strongSelf, key, [strongSelf objectForKey:key]);
     });
 }
 

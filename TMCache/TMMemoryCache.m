@@ -225,8 +225,6 @@ NSString * const TMMemoryCachePrefix = @"com.tumblr.TMMemoryCache";
 
 - (void)objectForKey:(NSString *)key block:(TMMemoryCacheObjectBlock)block
 {
-    NSDate *now = [[NSDate alloc] init];
-    
     if (!key || !block)
         return;
 
@@ -237,18 +235,7 @@ NSString * const TMMemoryCachePrefix = @"com.tumblr.TMMemoryCache";
         if (!strongSelf)
             return;
 
-        id object = [strongSelf->_dictionary objectForKey:key];
-
-        if (object) {
-            __weak TMMemoryCache *weakSelf = strongSelf;
-            dispatch_barrier_async(strongSelf->_queue, ^{
-                TMMemoryCache *strongSelf = weakSelf;
-                if (strongSelf)
-                    [strongSelf->_dates setObject:now forKey:key];
-            });
-        }
-
-        block(strongSelf, key, object);
+        block(strongSelf, key, [strongSelf objectForKey:key]);
     });
 }
 

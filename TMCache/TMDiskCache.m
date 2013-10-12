@@ -385,8 +385,6 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)objectForKey:(NSString *)key block:(TMDiskCacheObjectBlock)block
 {
-    NSDate *now = [[NSDate alloc] init];
-
     if (!key || !block)
         return;
 
@@ -398,14 +396,7 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
             return;
 
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
-        id <NSCoding> object = nil;
-
-        if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
-            object = [NSKeyedUnarchiver unarchiveObjectWithFile:[fileURL path]];
-            [strongSelf setFileModificationDate:now forURL:fileURL];
-        }
-
-        block(strongSelf, key, object, fileURL);
+        block(strongSelf, key, [strongSelf objectForKey:key], fileURL);
     });
 }
 
