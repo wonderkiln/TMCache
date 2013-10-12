@@ -662,14 +662,18 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
     if (!key)
         return nil;
     
-    NSDate *now = [NSDate new];
-    
     NSURL *fileURL = [self encodedFileURLForKey:key];
-    id <NSCoding> object = nil;
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
-        object = [NSKeyedUnarchiver unarchiveObjectWithFile:[fileURL path]];
-        [self setFileModificationDate:now forURL:fileURL];
+    // No need to check if file exists, as unarchiveObjectWithFile returns nil if there is no file at path
+    id <NSCoding> object = [NSKeyedUnarchiver unarchiveObjectWithFile:[fileURL path]];
+    
+    if (object) {
+        __weak TMDiskCache *weakSelf = self;
+        dispatch_barrier_async(_queue, ^{
+            TMDiskCache *strongSelf = weakSelf;
+            if (strongSelf)
+                [strongSelf setFileModificationDate:[NSDate new] forURL:fileURL];
+        });
     }
     
     return object;
