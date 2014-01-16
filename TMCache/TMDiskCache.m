@@ -428,7 +428,8 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
 
-        if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]] && _updateEntryDateOnRead) {
+        if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
+          if (_updateEntryDateOnRead)
             [strongSelf setFileModificationDate:now forURL:fileURL];
         } else {
             fileURL = nil;
