@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		84EFF61F18A97D2D007E3D07 /* TMCache.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 84EFF61E18A97D2D007E3D07 /* TMCache.podspec */; };
 		D07F1EB6171AFB7A001DBA02 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D07F1EB5171AFB7A001DBA02 /* UIKit.framework */; };
 		D07F1EB8171AFB7A001DBA02 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D07F1EB7171AFB7A001DBA02 /* Foundation.framework */; };
 		D07F1EBA171AFB7A001DBA02 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D07F1EB9171AFB7A001DBA02 /* CoreGraphics.framework */; };
@@ -37,6 +38,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		84EFF61E18A97D2D007E3D07 /* TMCache.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = TMCache.podspec; path = ../TMCache.podspec; sourceTree = "<group>"; };
 		D07F1EB2171AFB7A001DBA02 /* TMCache.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TMCache.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D07F1EB5171AFB7A001DBA02 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D07F1EB7171AFB7A001DBA02 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -89,6 +91,7 @@
 		D07F1EA9171AFB7A001DBA02 = {
 			isa = PBXGroup;
 			children = (
+				84EFF61E18A97D2D007E3D07 /* TMCache.podspec */,
 				D07F1EBB171AFB7A001DBA02 /* TMCache */,
 				D0E5D839171DF0AF0041E777 /* TMCache */,
 				D07F1ED9171AFB7A001DBA02 /* TMCacheTests */,
@@ -237,6 +240,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84EFF61F18A97D2D007E3D07 /* TMCache.podspec in Resources */,
 				D07F1ECC171AFB7A001DBA02 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
