@@ -30,9 +30,10 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath
 {
-    if (!name)
+    if (!name) {
         return nil;
-
+    }
+    
     if (self = [super init]) {
         _name = [name copy];
         
@@ -66,22 +67,25 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)objectForKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key || !block)
+    if (!key || !block) {
         return;
-
+    }
+    
     TMCache * __weak weakSelf = self;
 
     dispatch_async(_queue, ^{
         TMCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         TMCache * __weak weakSelf = strongSelf;
         
         [strongSelf->_memoryCache objectForKey:key block:^(TMMemoryCache *cache, NSString *key, id object) {
             TMCache *strongSelf = weakSelf;
-            if (!strongSelf)
+            if (!strongSelf) {
                 return;
+            }
             
             if (object) {
                 [strongSelf->_diskCache fileURLForKey:key block:^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
@@ -95,13 +99,15 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
                     if (strongSelf)
                         block(strongSelf, key, object);
                 });
-            } else {
+            }
+            else {
                 TMCache * __weak weakSelf = strongSelf;
 
                 [strongSelf->_diskCache objectForKey:key block:^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
                     TMCache *strongSelf = weakSelf;
-                    if (!strongSelf)
+                    if (!strongSelf) {
                         return;
+                    }
                     
                     [strongSelf->_memoryCache setObject:object forKey:key block:nil];
                     
@@ -109,8 +115,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
                     
                     dispatch_async(strongSelf->_queue, ^{
                         TMCache *strongSelf = weakSelf;
-                        if (strongSelf)
+                        if (strongSelf) {
                             block(strongSelf, key, object);
+                        }
                     });
                 }];
             }
@@ -120,9 +127,10 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key || !object)
+    if (!key || !object) {
         return;
-
+    }
+    
     dispatch_group_t group = nil;
     TMMemoryCacheObjectBlock memBlock = nil;
     TMDiskCacheObjectBlock diskBlock = nil;
@@ -148,8 +156,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
-            if (strongSelf)
+            if (strongSelf) {
                 block(strongSelf, key, object);
+            }
         });
         
         #if !OS_OBJECT_USE_OBJC
@@ -160,8 +169,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)removeObjectForKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key)
+    if (!key) {
         return;
+    }
     
     dispatch_group_t group = nil;
     TMMemoryCacheObjectBlock memBlock = nil;
@@ -188,8 +198,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
-            if (strongSelf)
+            if (strongSelf) {
                 block(strongSelf, key, nil);
+            }
         });
         
         #if !OS_OBJECT_USE_OBJC
@@ -225,8 +236,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
-            if (strongSelf)
+            if (strongSelf) {
                 block(strongSelf);
+            }
         });
         
         #if !OS_OBJECT_USE_OBJC
@@ -237,8 +249,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)trimToDate:(NSDate *)date block:(TMCacheBlock)block
 {
-    if (!date)
+    if (!date) {
         return;
+    }
 
     dispatch_group_t group = nil;
     TMMemoryCacheBlock memBlock = nil;
@@ -265,8 +278,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
-            if (strongSelf)
+            if (strongSelf) {
                 block(strongSelf);
+            }
         });
         
         #if !OS_OBJECT_USE_OBJC
@@ -292,8 +306,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (id)objectForKey:(NSString *)key
 {
-    if (!key)
+    if (!key) {
         return nil;
+    }
     
     __block id objectForKey = nil;
 
@@ -315,8 +330,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key
 {
-    if (!object || !key)
+    if (!object || !key) {
         return;
+    }
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -333,8 +349,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)removeObjectForKey:(NSString *)key
 {
-    if (!key)
+    if (!key) {
         return;
+    }
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -351,8 +368,9 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)trimToDate:(NSDate *)date
 {
-    if (!date)
+    if (!date) {
         return;
+    }
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 

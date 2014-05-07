@@ -45,9 +45,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath
 {
-    if (!name)
+    if (!name) {
         return nil;
-
+    }
+    
     if (self = [super init]) {
         _name = [name copy];
         _queue = [TMDiskCache sharedQueue];
@@ -113,26 +114,29 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (NSURL *)encodedFileURLForKey:(NSString *)key
 {
-    if (![key length])
+    if (![key length]) {
         return nil;
-
+    }
+    
     return [_cacheURL URLByAppendingPathComponent:[self encodedString:key]];
 }
 
 - (NSString *)keyForEncodedFileURL:(NSURL *)url
 {
     NSString *fileName = [url lastPathComponent];
-    if (!fileName)
+    if (!fileName) {
         return nil;
-
+    }
+    
     return [self decodedString:fileName];
 }
 
 - (NSString *)encodedString:(NSString *)string
 {
-    if (![string length])
+    if (![string length]) {
         return @"";
-
+    }
+    
     CFStringRef static const charsToEscape = CFSTR(".:/");
     CFStringRef escapedString = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
                                                                         (__bridge CFStringRef)string,
@@ -144,9 +148,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (NSString *)decodedString:(NSString *)string
 {
-    if (![string length])
+    if (![string length]) {
         return @"";
-
+    }
+    
     CFStringRef unescapedString = CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
                                                                                           (__bridge CFStringRef)string,
                                                                                           CFSTR(""),
@@ -195,9 +200,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 +(BOOL)moveItemAtURLToTrash:(NSURL *)itemURL
 {
-    if (![[NSFileManager defaultManager] fileExistsAtPath:[itemURL path]])
+    if (![[NSFileManager defaultManager] fileExistsAtPath:[itemURL path]]) {
         return NO;
-
+    }
+    
     NSError *error = nil;
     NSString *uniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
     NSURL *uniqueTrashURL = [[TMDiskCache sharedTrashURL] URLByAppendingPathComponent:uniqueString];
@@ -232,9 +238,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (BOOL)createCacheDirectory
 {
-    if ([[NSFileManager defaultManager] fileExistsAtPath:[_cacheURL path]])
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[_cacheURL path]]) {
         return NO;
-
+    }
+    
     NSError *error = nil;
     BOOL success = [[NSFileManager defaultManager] createDirectoryAtURL:_cacheURL
                                             withIntermediateDirectories:YES
@@ -265,9 +272,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
         TMDiskCacheError(error);
 
         NSDate *date = [dictionary objectForKey:NSURLContentModificationDateKey];
-        if (date)
+        if (date) {
             [_dates setObject:date forKey:key];
-
+        }
+        
         NSNumber *fileSize = [dictionary objectForKey:NSURLTotalFileAllocatedSizeKey];
         if (fileSize) {
             [_sizes setObject:fileSize forKey:key];
@@ -275,8 +283,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
         }
     }
 
-    if (byteCount > 0)
+    if (byteCount > 0) {
         self.byteCount = byteCount; // atomic
+    }
 }
 
 - (BOOL)setFileModificationDate:(NSDate *)date forURL:(NSURL *)fileURL
@@ -287,67 +296,77 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
                                                            error:&error];
     TMDiskCacheError(error);
 
-    if (success)
+    if (success) {
         [_dates setObject:date forKey:[self keyForEncodedFileURL:fileURL]];
-
+    }
+    
     return success;
 }
 
 - (BOOL)removeFileAndExecuteBlocksForKey:(NSString *)key
 {
     NSURL *fileURL = [self encodedFileURLForKey:key];
-    if (!fileURL || ![[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]])
+    if (!fileURL || ![[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
         return NO;
-
-    if (_willRemoveObjectBlock)
+    }
+    
+    if (_willRemoveObjectBlock) {
         _willRemoveObjectBlock(self, key, nil, fileURL);
-
+    }
+    
     BOOL trashed = [TMDiskCache moveItemAtURLToTrash:fileURL];
-    if (!trashed)
+    if (!trashed) {
         return NO;
+    }
     
     [TMDiskCache emptyTrash];
 
     NSNumber *byteSize = [_sizes objectForKey:key];
-    if (byteSize)
+    if (byteSize) {
         self.byteCount = _byteCount - [byteSize unsignedIntegerValue]; // atomic
-
+    }
+    
     [_sizes removeObjectForKey:key];
     [_dates removeObjectForKey:key];
 
-    if (_didRemoveObjectBlock)
+    if (_didRemoveObjectBlock) {
         _didRemoveObjectBlock(self, key, nil, fileURL);
-
+    }
+    
     return YES;
 }
 
 - (void)trimDiskToSize:(NSUInteger)trimByteCount
 {
-    if (_byteCount <= trimByteCount)
+    if (_byteCount <= trimByteCount) {
         return;
-
+    }
+    
     NSArray *keysSortedBySize = [_sizes keysSortedByValueUsingSelector:@selector(compare:)];
 
     for (NSString *key in [keysSortedBySize reverseObjectEnumerator]) { // largest objects first
         [self removeFileAndExecuteBlocksForKey:key];
 
-        if (_byteCount <= trimByteCount)
+        if (_byteCount <= trimByteCount) {
             break;
+        }
     }
 }
 
 - (void)trimDiskToSizeByDate:(NSUInteger)trimByteCount
 {
-    if (_byteCount <= trimByteCount)
+    if (_byteCount <= trimByteCount) {
         return;
-
+    }
+    
     NSArray *keysSortedByDate = [_dates keysSortedByValueUsingSelector:@selector(compare:)];
 
     for (NSString *key in keysSortedByDate) { // oldest objects first
         [self removeFileAndExecuteBlocksForKey:key];
 
-        if (_byteCount <= trimByteCount)
+        if (_byteCount <= trimByteCount) {
             break;
+        }
     }
 }
 
@@ -357,12 +376,14 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
     
     for (NSString *key in keysSortedByDate) { // oldest files first
         NSDate *accessDate = [_dates objectForKey:key];
-        if (!accessDate)
+        if (!accessDate) {
             continue;
+        }
         
         if ([accessDate compare:trimDate] == NSOrderedAscending) { // older than trim date
             [self removeFileAndExecuteBlocksForKey:key];
-        } else {
+        }
+        else {
             break;
         }
     }
@@ -370,8 +391,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)trimToAgeLimitRecursively
 {
-    if (_ageLimit == 0.0)
+    if (_ageLimit == 0.0) {
         return;
+    }
     
     NSDate *date = [[NSDate alloc] initWithTimeIntervalSinceNow:-_ageLimit];
     [self trimDiskToDate:date];
@@ -391,15 +413,17 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 {
     NSDate *now = [[NSDate alloc] init];
 
-    if (!key || !block)
+    if (!key || !block) {
         return;
-
+    }
+    
     TMDiskCache * __weak weakSelf = self;
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
+        }
 
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
         id <NSCoding> object = nil;
@@ -417,21 +441,24 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 {
     NSDate *now = [[NSDate alloc] init];
 
-    if (!key || !block)
+    if (!key || !block) {
         return;
-
+    }
+    
     TMDiskCache * __weak weakSelf = self;
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
 
         if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
             [strongSelf setFileModificationDate:now forURL:fileURL];
-        } else {
+        }
+        else {
             fileURL = nil;
         }
 
@@ -443,9 +470,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 {
     NSDate *now = [[NSDate alloc] init];
 
-    if (!key || !object)
+    if (!key || !object) {
         return;
-
+    }
+    
     TMCacheStartBackgroundTask();
 
     TMDiskCache * __weak weakSelf = self;
@@ -459,9 +487,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
 
-        if (strongSelf->_willAddObjectBlock)
+        if (strongSelf->_willAddObjectBlock) {
             strongSelf->_willAddObjectBlock(strongSelf, key, object, fileURL);
-
+        }
+        
         BOOL written = [NSKeyedArchiver archiveRootObject:object toFile:[fileURL path]];
 
         if (written) {
@@ -477,27 +506,32 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
                 strongSelf.byteCount = strongSelf->_byteCount + [diskFileSize unsignedIntegerValue]; // atomic
             }
             
-            if (strongSelf->_byteLimit > 0 && strongSelf->_byteCount > strongSelf->_byteLimit)
+            if (strongSelf->_byteLimit > 0 && strongSelf->_byteCount > strongSelf->_byteLimit) {
                 [strongSelf trimToSizeByDate:strongSelf->_byteLimit block:nil];
-        } else {
+            }
+        }
+        else {
             fileURL = nil;
         }
 
-        if (strongSelf->_didAddObjectBlock)
+        if (strongSelf->_didAddObjectBlock) {
             strongSelf->_didAddObjectBlock(strongSelf, key, object, written ? fileURL : nil);
-
-        if (block)
+        }
+        
+        if (block) {
             block(strongSelf, key, object, fileURL);
-
+        }
+        
         TMCacheEndBackgroundTask();
     });
 }
 
 - (void)removeObjectForKey:(NSString *)key block:(TMDiskCacheObjectBlock)block
 {
-    if (!key)
+    if (!key) {
         return;
-
+    }
+    
     TMCacheStartBackgroundTask();
 
     TMDiskCache * __weak weakSelf = self;
@@ -512,9 +546,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
         [strongSelf removeFileAndExecuteBlocksForKey:key];
 
-        if (block)
+        if (block) {
             block(strongSelf, key, nil, fileURL);
-
+        }
+        
         TMCacheEndBackgroundTask();
     });
 }
@@ -539,8 +574,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
         [strongSelf trimDiskToSize:trimByteCount];
 
-        if (block)
+        if (block) {
             block(strongSelf);
+        }
         
         TMCacheEndBackgroundTask();
     });
@@ -548,9 +584,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)trimToDate:(NSDate *)trimDate block:(TMDiskCacheBlock)block
 {
-    if (!trimDate)
+    if (!trimDate) {
         return;
-
+    }
+    
     if ([trimDate isEqualToDate:[NSDate distantPast]]) {
         [self removeAllObjects:block];
         return;
@@ -569,8 +606,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
         [strongSelf trimDiskToDate:trimDate];
 
-        if (block)
+        if (block) {
             block(strongSelf);
+        }
         
         TMCacheEndBackgroundTask();
     });
@@ -596,9 +634,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
         [strongSelf trimDiskToSizeByDate:trimByteCount];
 
-        if (block)
+        if (block) {
             block(strongSelf);
-
+        }
+        
         TMCacheEndBackgroundTask();
     });
 }
@@ -616,8 +655,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
             return;
         }
 
-        if (strongSelf->_willRemoveAllObjectsBlock)
+        if (strongSelf->_willRemoveAllObjectsBlock) {
             strongSelf->_willRemoveAllObjectsBlock(strongSelf);
+        }
         
         [TMDiskCache moveItemAtURLToTrash:strongSelf->_cacheURL];
         [TMDiskCache emptyTrash];
@@ -628,11 +668,13 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
         [strongSelf->_sizes removeAllObjects];
         strongSelf.byteCount = 0; // atomic
 
-        if (strongSelf->_didRemoveAllObjectsBlock)
+        if (strongSelf->_didRemoveAllObjectsBlock) {
             strongSelf->_didRemoveAllObjectsBlock(strongSelf);
-
-        if (block)
+        }
+        
+        if (block) {
             block(strongSelf);
+        }
         
         TMCacheEndBackgroundTask();
     });
@@ -640,9 +682,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)enumerateObjectsWithBlock:(TMDiskCacheObjectBlock)block completionBlock:(TMDiskCacheBlock)completionBlock
 {
-    if (!block)
+    if (!block) {
         return;
-
+    }
+    
     TMCacheStartBackgroundTask();
 
     TMDiskCache * __weak weakSelf = self;
@@ -661,9 +704,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
             block(strongSelf, key, nil, fileURL);
         }
 
-        if (completionBlock)
+        if (completionBlock) {
             completionBlock(strongSelf);
-
+        }
+        
         TMCacheEndBackgroundTask();
     });
 }
@@ -672,9 +716,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (id <NSCoding>)objectForKey:(NSString *)key
 {
-    if (!key)
+    if (!key) {
         return nil;
-
+    }
+    
     __block id <NSCoding> objectForKey = nil;
 
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
@@ -695,9 +740,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (NSURL *)fileURLForKey:(NSString *)key
 {
-    if (!key)
+    if (!key) {
         return nil;
-
+    }
+    
     __block NSURL *fileURLForKey = nil;
 
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
@@ -718,8 +764,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key
 {
-    if (!object || !key)
+    if (!object || !key) {
         return;
+    }
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -736,8 +783,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)removeObjectForKey:(NSString *)key
 {
-    if (!key)
+    if (!key) {
         return;
+    }
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
@@ -769,9 +817,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)trimToDate:(NSDate *)date
 {
-    if (!date)
+    if (!date) {
         return;
-
+    }
+    
     if ([date isEqualToDate:[NSDate distantPast]]) {
         [self removeAllObjects];
         return;
@@ -822,9 +871,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)enumerateObjectsWithBlock:(TMDiskCacheObjectBlock)block
 {
-    if (!block)
+    if (!block) {
         return;
-
+    }
+    
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 
     [self enumerateObjectsWithBlock:block completionBlock:^(TMDiskCache *cache) {
@@ -881,9 +931,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         strongSelf->_willRemoveObjectBlock = [block copy];
     });
 }
@@ -905,9 +956,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         strongSelf->_willRemoveAllObjectsBlock = [block copy];
     });
 }
@@ -929,9 +981,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         strongSelf->_didAddObjectBlock = [block copy];
     });
 }
@@ -953,9 +1006,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         strongSelf->_didRemoveObjectBlock = [block copy];
     });
 }
@@ -977,9 +1031,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
     dispatch_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
-
+        }
+        
         strongSelf->_didRemoveAllObjectsBlock = [block copy];
     });
 }
@@ -1001,13 +1056,15 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
     
     dispatch_barrier_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
+        }
         
         strongSelf->_byteLimit = byteLimit;
 
-        if (byteLimit > 0)
+        if (byteLimit > 0) {
             [strongSelf trimDiskToSizeByDate:byteLimit];
+        }
     });
 }
 
@@ -1028,8 +1085,9 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
     
     dispatch_barrier_async(_queue, ^{
         TMDiskCache *strongSelf = weakSelf;
-        if (!strongSelf)
+        if (!strongSelf) {
             return;
+        }
         
         strongSelf->_ageLimit = ageLimit;
         
