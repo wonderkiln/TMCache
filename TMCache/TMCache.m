@@ -69,14 +69,14 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
     if (!key || !block)
         return;
 
-    __weak TMCache *weakSelf = self;
+    TMCache * __weak weakSelf = self;
 
     dispatch_async(_queue, ^{
         TMCache *strongSelf = weakSelf;
         if (!strongSelf)
             return;
 
-        __weak TMCache *weakSelf = strongSelf;
+        TMCache * __weak weakSelf = strongSelf;
         
         [strongSelf->_memoryCache objectForKey:key block:^(TMMemoryCache *cache, NSString *key, id object) {
             TMCache *strongSelf = weakSelf;
@@ -88,7 +88,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
                     // update the access time on disk
                 }];
 
-                __weak TMCache *weakSelf = strongSelf;
+                TMCache * __weak weakSelf = strongSelf;
                 
                 dispatch_async(strongSelf->_queue, ^{
                     TMCache *strongSelf = weakSelf;
@@ -96,7 +96,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
                         block(strongSelf, key, object);
                 });
             } else {
-                __weak TMCache *weakSelf = strongSelf;
+                TMCache * __weak weakSelf = strongSelf;
 
                 [strongSelf->_diskCache objectForKey:key block:^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
                     TMCache *strongSelf = weakSelf;
@@ -105,7 +105,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
                     
                     [strongSelf->_memoryCache setObject:object forKey:key block:nil];
                     
-                    __weak TMCache *weakSelf = strongSelf;
+                    TMCache * __weak weakSelf = strongSelf;
                     
                     dispatch_async(strongSelf->_queue, ^{
                         TMCache *strongSelf = weakSelf;
@@ -145,7 +145,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
     [_diskCache setObject:object forKey:key block:diskBlock];
     
     if (group) {
-        __weak TMCache *weakSelf = self;
+        TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
             if (strongSelf)
@@ -185,7 +185,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
     [_diskCache removeObjectForKey:key block:diskBlock];
     
     if (group) {
-        __weak TMCache *weakSelf = self;
+        TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
             if (strongSelf)
@@ -222,7 +222,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
     [_diskCache removeAllObjects:diskBlock];
     
     if (group) {
-        __weak TMCache *weakSelf = self;
+        TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
             if (strongSelf)
@@ -262,7 +262,7 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
     [_diskCache trimToDate:date block:diskBlock];
     
     if (group) {
-        __weak TMCache *weakSelf = self;
+        TMCache * __weak weakSelf = self;
         dispatch_group_notify(group, _queue, ^{
             TMCache *strongSelf = weakSelf;
             if (strongSelf)
