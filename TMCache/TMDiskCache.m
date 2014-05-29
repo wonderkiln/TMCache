@@ -403,13 +403,26 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
         NSURL *fileURL = [strongSelf encodedFileURLForKey:key];
         id <NSCoding> object = nil;
+        BOOL isArchiveCorrupted = NO;
 
         if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]]) {
-            object = [NSKeyedUnarchiver unarchiveObjectWithFile:[fileURL path]];
-            [strongSelf setFileModificationDate:now forURL:fileURL];
+            
+            @try {
+                object = [NSKeyedUnarchiver unarchiveObjectWithFile:[fileURL path]];
+                [strongSelf setFileModificationDate:now forURL:fileURL];
+            }
+            @catch (NSException *exception) {
+                isArchiveCorrupted = YES;
+            }
         }
 
-        block(strongSelf, key, object, fileURL);
+        if (isArchiveCorrupted) {
+            [strongSelf removeObjectForKey:key block:^(TMDiskCache *cache, NSString *key, id<NSCoding> object, NSURL *fileURL) {
+                block(cache, key, object, fileURL);
+            }];
+        } else {
+            block(strongSelf, key, object, fileURL);
+        }
     });
 }
 
